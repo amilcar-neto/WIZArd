@@ -1,0 +1,29 @@
+[Unit]
+Description=WIZArd Discord RPG assistant
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=10
+
+[Service]
+Type=exec
+User=wizard
+Group=wizard
+WorkingDirectory=/opt/wizard
+Environment=HOME=/var/lib/wizard
+Environment=PATH=/opt/wizard/node_modules/.bin:/usr/local/bin:/usr/bin:/bin
+Environment=WIZARD_PYTHON=/opt/wizard/.venv/bin/python
+ExecStart=/usr/bin/env node --env-file=/opt/wizard/.env /opt/wizard/src/discord/bot.ts
+Restart=always
+RestartSec=15
+TimeoutStopSec=30
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/wizard
+
+[Install]
+WantedBy=multi-user.target

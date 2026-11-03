@@ -1,0 +1,172 @@
+# ============================================================================
+#  TEXTOS DO WIZARD — tudo o que o bot escreve no Discord
+# ----------------------------------------------------------------------------
+#  Como mudar:
+#   1. Troque só o que está DEPOIS do "=". Não mude o nome antes do "=".
+#   2. {palavra} entre chaves é preenchida pelo bot (ex.: {titulo} vira o nome
+#      da sessão). Pode tirar ou mudar de lugar, mas não invente novas.
+#   3. Para quebrar linha dentro da mensagem, escreva \n
+#   4. Publique com: npm.cmd run deploy  (os testes avisam se algo quebrou)
+#  Limites do Discord: botões até 80 letras; descrições de comando até 100.
+# ============================================================================
+
+
+# ---------------------------------------------------------------- DM (privado)
+
+# Resposta para quem NÃO é o dono e manda mensagem para o bot
+dm.terceiros = Não tema! Eu passei minha vida toda fazendo o impossível.
+# Alguém que não é o dono tenta clicar num botão do painel
+dm.so_dono = Para trás!
+# Bot acabou de ligar e ainda está carregando
+dm.iniciando = Estou ligando. Tente de novo em alguns segundos.
+
+
+# ---------------------------------------------------------------- Menu inicial
+
+# Texto acima dos botões do menu (pode deixar vazio)
+menu.titulo =
+botao.ultima_sessao = Última sessão
+botao.outra_sessao = Outras sessões
+botao.baixar_colecao = Todos os resumos completos
+botao.baixar_transcricoes = Todas as transcrições
+botao.voltar = Voltar
+botao.menu_inicial = Menu inicial
+
+
+# ---------------------------------------------------------------- Lista de sessões
+
+sessoes.titulo = **Sessões**
+# {pagina} e {total}: número da página
+sessoes.titulo_paginas = **Sessões** (página {pagina} de {total})
+sessoes.escolha = Escolha uma sessão
+sessoes.vazio = Ainda não há sessões gravadas.
+sessoes.gravando = gravando
+botao.sessoes_recentes = Sessões mais recentes
+botao.sessoes_antigas = Sessões mais antigas
+
+
+# ---------------------------------------------------------------- Tela de uma sessão
+
+# Nome dado a cada gravação nova. {data} e {hora} no fuso de config/ajustes.txt
+sessao.nome = Sessão de {data} às {hora}
+# Cabeçalho da tela. {titulo} = nome da sessão, {data} = dia em que começou
+sessao.cabecalho = **{titulo}** ({data})
+sessao.gravando = Gravação em andamento.
+sessao.interrompida = Gravação interrompida; os arquivos parciais foram guardados.
+sessao.pergunta_mesa = Não tenho certeza de que esta gravação é uma sessão da Serpente de Duas Cabeças. É?
+sessao.nao_e_mesa = Marcada como não sendo Serpente de Duas Cabeças: o resumo da campanha não é gerado.
+# {data} = último dia em que o áudio fica guardado
+sessao.audio_ate = Áudio disponível até {data}.
+sessao.sem_arquivos = Nenhum arquivo disponível agora.
+botao.baixar_resumo = Baixar resumo
+botao.baixar_transcricao = Baixar transcrição
+botao.baixar_audio = Baixar áudio
+# {partes} = quantidade de arquivos de áudio
+botao.baixar_audio_partes = Baixar áudio ({partes} partes)
+botao.transcrever = Transcrever o áudio
+botao.gerar_resumo = Gerar resumo
+botao.e_mesa = Sim, é Serpente
+botao.nao_e_mesa = Não é
+
+
+# ---------------------------------------------------------------- Arquivos enviados
+
+arquivo.colecao = Sua coleção de resumos.
+# {titulo} = nome da sessão
+arquivo.transcricao = Transcrição: {titulo}
+# {quantidade} = número de arquivos enviados
+arquivo.transcricoes_enviadas = {quantidade} transcrição(ões) enviada(s). As que já passaram do prazo de guarda não entram.
+arquivo.sem_transcricoes = Não há transcrições disponíveis agora.
+
+
+# ---------------------------------------------------------------- Pedidos (transcrever / resumir)
+
+fila.entrou = Pedido na fila. Aviso aqui quando terminar; pode fechar o Discord.
+fila.entrou_esperando = Pedido na fila. Ele começa quando o StreamAmigos estiver sem salas abertas; aviso aqui quando terminar.
+fila.ja_existe = Esse pedido já está na fila ou em andamento.
+# Avisos quando o pedido termina. {titulo} = nome da sessão
+fila.transcricao_pronta = {titulo}\nTranscrição pronta. Abra a sessão no menu para baixar ou gerar o resumo.
+fila.resumo_pronto = {titulo}\nResumo pronto. Ele chega logo abaixo, com os botões da coleção.
+fila.confirmar_mesa = {titulo}\nNão tenho certeza de que esta gravação é uma sessão da Serpente de Duas Cabeças. É?
+fila.interrompida = {titulo}\nO pedido foi interrompido porque o bot reiniciou. Os arquivos estão guardados; peça de novo pelo menu.
+fila.falhou = {titulo}\nO pedido falhou. Os arquivos estão guardados; tente de novo pelo menu.
+confirmacao.sim = Certo, vou gerar o resumo da Serpente de Duas Cabeças. Aviso aqui quando terminar.
+confirmacao.nao = Certo, não é Serpente de Duas Cabeças. A transcrição e o áudio continuam no menu.
+
+
+# ---------------------------------------------------------------- Gravação
+
+# Mensagem publicada no chat do canal de voz quando a gravação começa
+gravacao.aviso_canal = Este canal está sendo gravado para o mestre da campanha. Use /wizard parar para encerrar.
+# Mensagens na DM do dono. {titulo} = nome da sessão
+gravacao.encerrada = {titulo}\nGravação encerrada. Mande qualquer mensagem para abrir o menu e baixar o áudio ou pedir a transcrição.
+gravacao.interrompida = {titulo}\nGravação interrompida; as partes gravadas foram guardadas. Mande qualquer mensagem para abrir o menu.
+
+
+# ---------------------------------------------------------------- Comando /wizard
+
+comando.descricao = Gravação de sessões
+comando.entrar = Gravar no canal de voz em que você está
+comando.parar = Encerrar a gravação no seu canal de voz
+comando.status = Ver se há gravação e como está a entrada automática
+comando.configurar = Só o dono: configurar a entrada automática
+opcao.canal = Canal de voz
+opcao.minimo = Mínimo de pessoas no canal (bots não contam)
+opcao.automatico = Entrar sozinho quando atingir o mínimo
+# Respostas (só quem usou o comando vê)
+comando.gravacao_iniciada = Gravação iniciada. Os arquivos ficam na DM do dono.
+comando.gravacao_encerrada = Gravação encerrada e arquivos guardados. A entrada automática fica pausada até o canal esvaziar.
+# {estado} = ativada/desativada, {canal} = canal escolhido, {minimo} = número de pessoas
+comando.auto_configurado = Entrada automática {estado} em {canal}; mínimo de {minimo} pessoa(s), sem contar bots.
+comando.ativada = ativada
+comando.desativada = desativada
+# Status. {canal} = canal
+status.gravando = Gravando em {canal}.
+status.sem_gravacao = Sem gravação agora.
+status.auto = Automático: {canal}, mínimo {minimo} pessoa(s).
+status.pausado = Pausado até o canal esvaziar.
+status.auto_desligado = Entrada automática desligada.
+
+
+# ---------------------------------------------------------------- Erros mostrados ao usuário
+
+erro.privado = Este bot é privado e não funciona neste servidor.
+erro.so_dono_configura = Só o dono do bot pode configurar.
+erro.canal_invalido = Escolha um canal de voz que você consiga ver.
+erro.entre_em_canal = Entre em um canal de voz antes de me chamar.
+erro.sem_gravacao = Não há gravação neste servidor.
+erro.precisa_estar_no_canal = Você precisa estar no canal que está sendo gravado para encerrar.
+erro.ja_gravando_aqui = Já existe uma gravação neste servidor. Use /wizard status.
+erro.ja_gravando_outra = Já estou gravando outra sessão.
+erro.sem_permissao = Preciso das permissões Ver canal, Conectar e Enviar mensagens nesse canal de voz.
+erro.sem_voz = A gravação de voz não está instalada no servidor.
+erro.sem_ffmpeg = O FFmpeg não está instalado no servidor.
+erro.falha_comando = Algo deu errado (conexão, permissão ou instalação). Os arquivos foram guardados.
+erro.enviando = Ainda estou enviando os arquivos do pedido anterior. Aguarde um instante.
+erro.generico = Não consegui concluir. Os arquivos foram guardados.
+erro.colecao_indisponivel = A coleção de resumos ainda não está disponível.
+erro.arquivo_indisponivel = Esse arquivo não está disponível (ainda não existe ou já passou do prazo de guarda).
+erro.audio_grande = Este áudio passa do limite de tamanho do Discord. A cópia está guardada no servidor.
+erro.sessao_nao_encontrada = Sessão não encontrada.
+erro.sem_sessoes = Ainda não há sessões gravadas.
+erro.opcao_invalida = Opção inválida. Abra o menu de novo.
+erro.sessao_gravando = Espere a gravação terminar.
+erro.ja_transcrita = A transcrição já está pronta. Use Baixar transcrição.
+erro.sem_audio = O áudio não está mais disponível.
+erro.ja_resumida = O resumo já está pronto. Use Baixar resumo.
+erro.transcreva_antes = Transcreva esta sessão primeiro.
+erro.nao_e_mesa = Esta gravação foi marcada como não sendo Serpente de Duas Cabeças.
+
+
+# ---------------------------------------------------------------- Resumo e coleção
+
+entrega.resumo = Resumo completo em Markdown. Quer adicionar à sua coleção?
+entrega.resumo_sem_botoes = Resumo completo em Markdown. A coleção só muda se você confirmar.
+entrega.pergunta = Quer adicionar este resumo à sua coleção?
+entrega.colecao_atualizada = Resumo adicionado. Aqui está sua coleção atualizada.
+botao.adicionar_colecao = Adicionar à coleção
+botao.nao_adicionar = Não adicionar
+decisao.adicionado = Pronto: o resumo entrou na coleção.
+decisao.nao_adicionado = Certo: o resumo ficou guardado sem entrar na coleção.
+decisao.falhou = Não consegui concluir. A coleção não foi alterada por engano e nada foi duplicado. Tente de novo em instantes.
+decisao.so_dono = Este botão é só para o dono, na DM.

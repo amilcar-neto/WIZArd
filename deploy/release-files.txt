@@ -1,0 +1,16 @@
+src
+scripts
+deploy
+tests
+docs
+examples
+voice-runtime/package.json
+voice-runtime/package-lock.json
+package.json
+package-lock.json
+README.md
+AGENTS.md
+CLAUDE.md
+formatador.md
+Arquivo Formato Resumo de Sessão.md
+config

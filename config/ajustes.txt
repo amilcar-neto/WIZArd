@@ -1,0 +1,9 @@
+# Ajustes do WIZArd. Mude o que está depois do "=" e publique com: npm.cmd run deploy
+
+# Fuso horário dos nomes das sessões (ex.: America/Cuiaba, America/Sao_Paulo, America/Manaus)
+fuso = America/Cuiaba
+
+# Esperar o StreamAmigos ficar sem salas abertas antes de transcrever ou resumir (sim / não).
+# Se alguém abrir uma sala no meio de uma transcrição, ela pausa e continua quando a sala fechar.
+esperar_streamamigos = sim
+streamamigos_endereco = http://127.0.0.1:3100/api/info

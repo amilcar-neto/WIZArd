@@ -1,0 +1,25 @@
+# Lista de permissão: tudo fica fora do Git, exceto o que está liberado abaixo.
+# Nunca libere: .env, dados/, formato real da campanha, formatador.md, docs/CONTINUIDADE.md.
+/*
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/AGENTS.md
+!/CLAUDE.md
+!/.env.example
+!/package.json
+!/package-lock.json
+!/src/
+!/tests/
+!/scripts/
+!/deploy/
+!/config/
+!/examples/
+!/docs/
+/docs/CONTINUIDADE.md
+!/voice-runtime/
+/voice-runtime/*
+!/voice-runtime/package.json
+!/voice-runtime/package-lock.json
+__pycache__/
+*.pyc

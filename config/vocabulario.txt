@@ -1,0 +1,47 @@
+# Vocabulário extra para o Whisper: termos dos Mitos, os mais difíceis de acertar pelo som.
+# Personagens, NPCs, itens e lugares já registrados na coleção de resumos entram SOZINHOS
+# (os da sessão mais recente primeiro), então não precisa repeti-los aqui.
+# A ordem importa: o topo tem prioridade. O Whisper só aceita uns 45-50 termos no total.
+# Edite no PC e publique com: npm.cmd run deploy  ·  Na VPS, "wizard vocabulario" mostra o que entrou.
+
+# Entidades e lugares dos Mitos
+Yig
+Tsathoggua
+Ghatanothoa
+Naacal
+Yaddith-Gho
+
+# Criaturas
+shoggoths
+noitesguios
+voormis
+lloigor
+dhole
+gug
+zoogs
+buopoth
+aranha de Leng
+
+# Povo serpente
+Ssulithan
+Sashannal
+Tyranissh
+Sahrizan
+Karnassh
+Hlysa
+Zyneste
+Sevestra
+
+# Artefatos, tomos e feitiços
+Coroa Cobra
+Cetro Serpentino
+Anais de Mu
+Texto de R'lyeh
+Coração de Yig
+Flauta de Tsathoggua
+Dispositivo de Haftorang
+Constrição de Yig
+Consumir Semblante
+Troca de Pele
+Tornar-se a Escuridão
+Mãos de Colubra

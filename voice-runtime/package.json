@@ -1,0 +1,9 @@
+{
+  "name": "wizard-voice-runtime",
+  "private": true,
+  "description": "Dependências opcionais de gravação; instalar com npm run setup:voice",
+  "dependencies": {
+    "@discordjs/voice": "0.19.2",
+    "opusscript": "0.1.1"
+  }
+}
