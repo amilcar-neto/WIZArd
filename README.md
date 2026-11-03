@@ -2,7 +2,9 @@
 
 ![WIZArd](docs/capa.webp)
 
-Bot de Discord que **grava sessões de RPG por voz, transcreve com Whisper e gera o resumo da sessão com IA**. Está em produção numa VPS, usado pela minha mesa de RPG.
+Bot de Discord que **grava conversas de voz, transcreve com Whisper e gera resumos com IA**. Está em produção numa VPS. O primeiro caso de uso real é o meu grupo de RPG: o bot registra cada sessão da campanha e mantém o histórico da mesa.
+
+A arquitetura (gravação por pessoa → transcrição → classificação por LLM → resumo → aprovação humana) serve para qualquer conversa, como reuniões, aulas ou atendimento. O que é específico da campanha fica separado do resto: o formato do resumo e o vocabulário em arquivos de configuração, e as regras de reconhecimento da mesa num módulo próprio (`src/sessions/campaign.ts`).
 
 ## Como funciona
 
