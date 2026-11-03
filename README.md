@@ -8,14 +8,7 @@ A arquitetura (gravação por pessoa → transcrição → classificação por L
 
 ## Como funciona
 
-```
-Canal de voz ──► gravação (uma faixa por pessoa, Opus → Ogg)
-             ──► transcrição local (faster-whisper, com nome de quem falou e horário)
-             ──► IA classifica: "isto é mesmo uma sessão da campanha?"
-                    (confiança ≥ 0,90 + trechos literais como evidência; senão pergunta ao dono)
-             ──► IA gera o resumo no formato da mesa, usando um glossário extraído das sessões anteriores
-             ──► DM pro dono com o resumo e botões; ele aprova a entrada na coleção oficial
-```
+![Fluxo do WIZArd: gravação, transcrição, classificação por LLM, resumo e aprovação humana](docs/fluxo.svg)
 
 ## Destaques técnicos
 
