@@ -30,12 +30,10 @@ Canal de voz ──► gravação (uma faixa por pessoa, Opus → Ogg)
 
 O projeto foi construído com Claude Code e Codex trabalhando em revezamento. As regras e autorizações ficam em [`AGENTS.md`](AGENTS.md), e as etapas com critério de conclusão em [`docs/CRONOGRAMA.md`](docs/CRONOGRAMA.md). Um diário de continuidade (mantido fora do repositório, por ter dados da infraestrutura) faz a passagem de contexto entre um agente e outro. Meu papel: definir o produto e as regras, revisar, testar com a mesa de verdade e decidir.
 
-## Comece por aqui
+## Documentação
 
-- **[Como mudar mensagens, botões e ajustes](docs/COMO-MUDAR.md)** — sem programar: edite `config/` e rode `npm.cmd run deploy`.
-
+- [Como mudar mensagens, botões e ajustes](docs/COMO-MUDAR.md): sem programar, editando `config/` e rodando `npm.cmd run deploy`.
 - [Cronograma](docs/CRONOGRAMA.md): etapas, estimativas e critérios de conclusão.
-- Continuidade entre IAs (`docs/CONTINUIDADE.md`, só local): estado real, decisões, testes e próximo passo.
 - [Arquitetura](docs/ARQUITETURA.md): diretórios e fluxo de dados.
 - [Discord](docs/DISCORD.md): menu privado e comandos.
 - [VPS](docs/VPS.md): instalação, migração, systemd e teste de aceitação.
@@ -59,7 +57,7 @@ Envie qualquer mensagem na DM para abrir o menu. Só o proprietário recebe bot�
 
 ## Reconhecimento da mesa
 
-Antes de gerar um novo resumo, uma chamada separada de IA verifica se a transcrição contém uma sessão efetiva de **Serpente de Duas Cabeças**. Testes, conversa comum, outro RPG ou dúvida bloqueiam o formato da campanha. A regra exige confiança de pelo menos 0,90, referências distintas da mesa e trechos literais de evidência. A classificação usa instruções neutras; o formato privado só é enviado na geração aprovada.
+Antes de gerar um novo resumo, uma chamada separada de IA verifica se a transcrição contém uma sessão efetiva de **Serpente de Duas Cabeças**. Testes, conversa comum, outro RPG ou dúvida bloqueiam o formato da campanha. Quando a IA não reconhece a sessão, o bot pergunta ao dono pelo Discord, e só gera o resumo se ele confirmar. A regra exige confiança de pelo menos 0,90, referências distintas da mesa e trechos literais de evidência. A classificação usa instruções neutras; o formato privado só é enviado na geração aprovada.
 
 Isso é reconhecimento probabilístico e precisa de validação com exemplos reais. Não garante identificação perfeita. Áudio e transcrição continuam acessíveis quando o resumo é bloqueado. Inclusão na coleção ainda exige o clique explícito do proprietário. Os resumos históricos já existentes são preservados, sem reclassificação automática.
 

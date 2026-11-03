@@ -17,7 +17,7 @@ Antes de trabalhar, leia `docs/CONTINUIDADE.md` e `docs/CRONOGRAMA.md`. Ambos s�
 
 ## Ambiente e execução
 
-- Workspace Windows: `C:\Users\groun\Downloads\WIZArd`. PowerShell bloqueia `npm.ps1`: usar `npm.cmd`.
+- Workspace Windows: a pasta deste repositório no PC do dono. PowerShell bloqueia `npm.ps1`: usar `npm.cmd`.
 - Node.js >= 24.19. TypeScript executado nativamente pelo Node.
 - Testes: `node --test tests/<arquivo>.test.ts`, `npm.cmd test` e `python tests/migration_test.py`. Testes devem usar arquivos temporários fictícios.
 - Este diretório não era um repositório Git em 28/10/2026. Não presumir commits, branches ou histórico Git.
@@ -32,7 +32,7 @@ Antes de trabalhar, leia `docs/CONTINUIDADE.md` e `docs/CRONOGRAMA.md`. Ambos s�
 - Na VPS o dono opera com o comando `wizard` (`on`, `off`, `restart`, `status`, `logs`, `login`, `versao`, `versoes`, `voltar`, `help`).
 - A chave SSH tem senha. Não registrar a senha em arquivos. Para deploy sem interação, o usuário precisa deixar a chave carregada num ssh-agent.
 - Não rodar o bot local com o mesmo token enquanto a produção estiver ligada.
-- Coleção oficial da Serpente: `C:/Users/groun/Downloads/serpente de duas cabeças/Transcricoes_Completas_Sessoes.md` no PC. `dados/Transcricoes_Completas_Sessoes.md` faz parte só do fluxo da Serpente e deve ser desconsiderado em outras mesas/fluxos. Não apagar nem mesclar.
+- Coleção oficial da Serpente: `%USERPROFILE%/Downloads/serpente de duas cabeças/Transcricoes_Completas_Sessoes.md` no PC. `dados/Transcricoes_Completas_Sessoes.md` faz parte só do fluxo da Serpente e deve ser desconsiderado em outras mesas/fluxos. Não apagar nem mesclar.
 - Decisão do dono (28/10/2026): a VPS mantém a própria cópia da coleção (`/opt/wizard/dados/colecao/...`). Não sincronizar automaticamente VPS → PC nem PC → VPS. O dono baixa a coleção pelo Discord (enviada após aprovação ou pelo menu) e substitui o arquivo oficial manualmente.
 
 ## Textos e ajustes editáveis

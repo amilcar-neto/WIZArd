@@ -67,8 +67,8 @@ Os recibos antigos guardam caminhos absolutos do Windows. O script abaixo troca 
 Primeiro simule, depois aplique com o bot parado:
 
 ```bash
-python3 scripts/migrate_paths.py --data /var/lib/wizard/dados --from-root 'C:\Users\groun\Downloads\WIZArd' --to-root /opt/wizard
-python3 scripts/migrate_paths.py --data /var/lib/wizard/dados --from-root 'C:\Users\groun\Downloads\WIZArd' --to-root /opt/wizard --apply
+python3 scripts/migrate_paths.py --data /var/lib/wizard/dados --from-root 'C:\caminho\do\WIZArd' --to-root /opt/wizard
+python3 scripts/migrate_paths.py --data /var/lib/wizard/dados --from-root 'C:\caminho\do\WIZArd' --to-root /opt/wizard --apply
 chown -R wizard:wizard /var/lib/wizard/dados
 ```
 
