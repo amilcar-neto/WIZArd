@@ -87,7 +87,7 @@ Reconvide/atualize a instalação com os escopos `bot` e `applications.commands`
 Só o proprietário configura:
 
 ```text
-/wizard configurar canal:<seu canal> minimo:3 automatico:true
+/wizard configurar canal:<seu canal> minimo:3 automatico:true pos_sessao:Transcrever e resumir
 ```
 
 Membros podem usar `/wizard entrar` no próprio canal. `/wizard parar` funciona para quem está no canal gravado e para o dono. `/wizard status` consulta o estado. A entrada automática conta humanos, ignora bots e encerra ao esvaziar. Parar manualmente pausa a entrada automática até o canal esvaziar ou o proprietário configurar novamente.
@@ -130,6 +130,6 @@ npm run check
 systemctl start wizard
 ```
 
-Logs do aplicativo registram eventos/códigos sem texto de campanha. Resumos e coleção ficam preservados. TXT segue a retenção existente de 7 dias após entrega do resumo; conversas sem resumo não têm exclusão automática de TXT nesta versão. Áudio expira 14 dias após transcrição pronta, com validação do hash e existência de transcrição ou resumo. Áudio não transcrito é preservado. Avaliar disco com `df -h` e revisar esses prazos após teste de uso real.
+Logs do aplicativo registram eventos/códigos sem texto de campanha. Resumos e coleção ficam preservados. Prazo único de 7 dias (`dias_guarda` em `config/ajustes.txt`), sempre com validação de hash e caminho: áudio expira 7 dias após o fim da gravação, ou após a transcrição se ela vier depois; transcrição sem resumo (conversa, teste, outra mesa) expira 7 dias após ficar pronta; transcrição com resumo expira 7 dias após a entrega completa do resumo na DM, respeitando `--manter-transcricao`. Pedido de transcrição ou resumo na fila impede a exclusão. Resumos e coleção nunca são apagados. Gravações que já existiam sem prazo ganham pelo menos 1 dia de carência após a publicação. Avaliar disco com `df -h`. A variável antiga `WIZARD_AUDIO_RETENTION_DAYS` não é mais usada.
 
 Referências: [systemd](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html), [voz Discord.js](https://discord.js.org/docs/packages/voice/main), [faster-whisper](https://github.com/SYSTRAN/faster-whisper).

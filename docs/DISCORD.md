@@ -35,8 +35,10 @@ Outros usuários recebem uma resposta sem botões nem arquivos. Controles privad
 /wizard entrar
 /wizard parar
 /wizard status
-/wizard configurar canal:<canal de voz> minimo:<número> automatico:<true|false>
+/wizard configurar canal:<canal de voz> minimo:<número> automatico:<true|false> [pos_sessao:<Nada|Transcrever|Transcrever e resumir>]
 ```
+
+`pos_sessao` (opcional; sem escolher, mantém o valor anterior; padrão Nada) faz o bot pedir sozinho a transcrição, ou a transcrição e o resumo, quando a gravação termina — ao esvaziar o canal ou com `/wizard parar`. Gravação interrompida ou mais curta que `pos_sessao_minimo_minutos` (5) só é transcrita. O resumo automático continua passando pela pergunta "é Serpente?" e pelo clique para entrar na coleção.
 
 Só o proprietário configura. Membros podem chamar o bot para o próprio canal de voz. Quem está no canal gravado e o proprietário podem encerrar. A configuração automática conta humanos, ignora bots, permite uma gravação simultânea e encerra ao esvaziar o canal. Parar manualmente pausa o automático até o canal configurado esvaziar ou o dono configurar novamente.
 
@@ -56,7 +58,7 @@ Use o comando acima apenas para enfileirar conscientemente um resumo já pronto.
 
 ## Retenção e falhas
 
-TXT: 7 dias após entrega completa do resumo na DM, salvo preservação explícita. Conversas sem resumo ainda não têm prazo automático de TXT nesta versão. Áudio: 14 dias após transcrição concluída, exigindo hash válido e transcrição ou resumo preservado. Sem transcrição, áudio é conservado. Coleção e resumos não são apagados automaticamente.
+Prazo único de 7 dias (`dias_guarda` em `config/ajustes.txt`), sempre com validação de hash e caminho: áudio expira 7 dias após o fim da gravação, ou após a transcrição se ela vier depois; transcrição sem resumo (conversa, teste, outra mesa) expira 7 dias após ficar pronta; transcrição com resumo expira 7 dias após a entrega completa do resumo na DM, respeitando `--manter-transcricao`. Pedido de transcrição ou resumo na fila impede a exclusão. Resumos e coleção nunca são apagados.
 
 Fila, catálogo, configuração e decisões persistem no disco. Gravações ativas viram interrompidas no reinício e suas partes existentes são preservadas. Gerações interrompidas não repetem automaticamente o consumo do modelo: peça novamente. Locks de escrita deixados por queda abrupta exigem verificar que o processo anterior terminou antes de removê-los; o bot não remove locks antigos às cegas.
 

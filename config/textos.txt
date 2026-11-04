@@ -57,6 +57,8 @@ sessao.pergunta_mesa = Não tenho certeza de que esta gravação é uma sessão 
 sessao.nao_e_mesa = Marcada como não sendo Serpente de Duas Cabeças: o resumo da campanha não é gerado.
 # {data} = último dia em que o áudio fica guardado
 sessao.audio_ate = Áudio disponível até {data}.
+# {data} = último dia em que a transcrição sem resumo fica guardada
+sessao.transcricao_ate = Transcrição disponível até {data}.
 sessao.sem_arquivos = Nenhum arquivo disponível agora.
 botao.baixar_resumo = Baixar resumo
 botao.baixar_transcricao = Baixar transcrição
@@ -86,6 +88,8 @@ fila.entrou_esperando = Pedido na fila. Ele começa quando o StreamAmigos estive
 fila.ja_existe = Esse pedido já está na fila ou em andamento.
 # Avisos quando o pedido termina. {titulo} = nome da sessão
 fila.transcricao_pronta = {titulo}\nTranscrição pronta. Abra a sessão no menu para baixar ou gerar o resumo.
+# Pós-sessão automático: a transcrição ficou pronta e o resumo já foi pedido
+fila.transcricao_pronta_resumindo = {titulo}\nTranscrição pronta. O resumo já foi pedido; aviso aqui quando terminar.
 fila.resumo_pronto = {titulo}\nResumo pronto. Ele chega logo abaixo, com os botões da coleção.
 fila.confirmar_mesa = {titulo}\nNão tenho certeza de que esta gravação é uma sessão da Serpente de Duas Cabeças. É?
 fila.interrompida = {titulo}\nO pedido foi interrompido porque o bot reiniciou. Os arquivos estão guardados; peça de novo pelo menu.
@@ -101,6 +105,12 @@ gravacao.aviso_canal = Este canal está sendo gravado para o mestre da campanha.
 # Mensagens na DM do dono. {titulo} = nome da sessão
 gravacao.encerrada = {titulo}\nGravação encerrada. Mande qualquer mensagem para abrir o menu e baixar o áudio ou pedir a transcrição.
 gravacao.interrompida = {titulo}\nGravação interrompida; as partes gravadas foram guardadas. Mande qualquer mensagem para abrir o menu.
+# Pós-sessão automático (opção pos_sessao do /wizard configurar): a primeira linha vem seguida de uma das outras.
+gravacao.encerrada_auto = {titulo}\nGravação encerrada.
+gravacao.auto_transcricao = Transcrição pedida automaticamente; aviso aqui quando terminar.
+gravacao.auto_resumo = Transcrição e resumo pedidos automaticamente; aviso aqui quando terminarem.
+gravacao.auto_so_transcricao = Transcrição pedida automaticamente. O resumo não foi pedido porque a gravação foi curta ou interrompida; peça pelo menu se quiser.
+gravacao.auto_falhou = Não consegui pedir a transcrição automática. Os arquivos estão guardados; peça pelo menu.
 
 
 # ---------------------------------------------------------------- Comando /wizard
@@ -109,10 +119,15 @@ comando.descricao = Gravação de sessões
 comando.entrar = Gravar no canal de voz em que você está
 comando.parar = Encerrar a gravação no seu canal de voz
 comando.status = Ver se há gravação e como está a entrada automática
-comando.configurar = Só o dono: configurar a entrada automática
+comando.configurar = Só o dono: configurar a entrada automática e o pós-sessão
 opcao.canal = Canal de voz
 opcao.minimo = Mínimo de pessoas no canal (bots não contam)
 opcao.automatico = Entrar sozinho quando atingir o mínimo
+opcao.pos_sessao = O que fazer sozinho quando a gravação terminar (se não escolher, mantém)
+# Escolhas da opção pos_sessao (também aparecem no /wizard status)
+pos_sessao.nada = Nada
+pos_sessao.transcrever = Transcrever
+pos_sessao.transcrever_e_resumir = Transcrever e resumir
 # Respostas (só quem usou o comando vê)
 comando.gravacao_iniciada = Gravação iniciada. Os arquivos ficam na DM do dono.
 comando.gravacao_encerrada = Gravação encerrada e arquivos guardados. A entrada automática fica pausada até o canal esvaziar.
@@ -126,6 +141,8 @@ status.sem_gravacao = Sem gravação agora.
 status.auto = Automático: {canal}, mínimo {minimo} pessoa(s).
 status.pausado = Pausado até o canal esvaziar.
 status.auto_desligado = Entrada automática desligada.
+# {opcao} = Nada / Transcrever / Transcrever e resumir
+status.pos_sessao = Ao terminar a gravação: {opcao}.
 
 
 # ---------------------------------------------------------------- Erros mostrados ao usuário

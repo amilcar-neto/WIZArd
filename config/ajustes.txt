@@ -7,3 +7,11 @@ fuso = America/Cuiaba
 # Se alguém abrir uma sala no meio de uma transcrição, ela pausa e continua quando a sala fechar.
 esperar_streamamigos = sim
 streamamigos_endereco = http://127.0.0.1:3100/api/info
+
+# Por quantos dias guardar áudio e transcrições (resumos e coleção ficam para sempre).
+# Áudio: conta do fim da gravação, ou da transcrição se ela vier depois.
+# Transcrição sem resumo: conta de quando ficou pronta. (Com resumo: sempre 7 dias após entregar o resumo.)
+dias_guarda = 7
+
+# Pós-sessão automático: gravação mais curta que isto (minutos) só é transcrita, nunca resumida sozinha.
+pos_sessao_minimo_minutos = 5

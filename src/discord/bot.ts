@@ -16,7 +16,7 @@ if (!token || !/^\d+$/.test(ownerId)) {
   console.error('Configure DISCORD_BOT_TOKEN e DISCORD_OWNER_ID no .env local. Veja docs/DISCORD.md.'); process.exit(1);
 }
 for (const [key, min, max] of [
-  ['WIZARD_AUDIO_RETENTION_DAYS', 1, 365], ['WIZARD_MAX_RECORDING_HOURS', 1, 12],
+  ['WIZARD_MAX_RECORDING_HOURS', 1, 12],
   ['WIZARD_TRANSCRIBE_THREADS', 1, 64], ['WIZARD_TRANSCRIBE_TIMEOUT_MS', 1000, 86400000],
   ['WIZARD_TIMEOUT_MS', 1000, 86400000]
 ] as const) {
@@ -31,7 +31,7 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 const library = new SessionLibrary(managedRoot, root);
 const jobs = new SessionJobs(library, async (job, session) => {
   const user = await client.users.fetch(ownerId), titulo = session?.title ?? '';
-  const key = job.status === 'done' ? (job.action === 'transcribe' ? 'fila.transcricao_pronta' : 'fila.resumo_pronto')
+  const key = job.status === 'done' ? (job.action === 'transcribe' ? (job.autoSummary ? 'fila.transcricao_pronta_resumindo' : 'fila.transcricao_pronta') : 'fila.resumo_pronto')
     : job.status === 'blocked' ? 'fila.confirmar_mesa' : job.status === 'interrupted' ? 'fila.interrompida' : 'fila.falhou';
   // Quando a IA não reconhece a mesa, pergunta ao dono em vez de decidir sozinha.
   const components = job.status === 'blocked' && session ? [confirmRow(session.id)] : [];
@@ -39,8 +39,19 @@ const jobs = new SessionJobs(library, async (job, session) => {
 }, { busy: streamBusy });
 const menu = new PrivateMenu(client, ownerId, library, jobs);
 const recorder = new VoiceRecorder(library, async session => {
+  // Pós-sessão automático: só se o dono ligou essa opção para o servidor.
+  const plan = session.guildId ? guildControls.afterSession(session.guildId) : 'nada';
+  let extra = '';
+  if (plan !== 'nada') {
+    try {
+      const { summarize } = await jobs.afterRecording(session.id, plan === 'transcrever_e_resumir');
+      extra = t(summarize ? 'gravacao.auto_resumo' : plan === 'transcrever_e_resumir' ? 'gravacao.auto_so_transcricao' : 'gravacao.auto_transcricao');
+      void jobs.tick().catch(e => logFailure('session_jobs', e));
+    } catch (e) { await logFailure('after_session', e); extra = t('gravacao.auto_falhou'); }
+  }
   const user = await client.users.fetch(ownerId);
-  await user.send({ content: t(session.status === 'interrupted' ? 'gravacao.interrompida' : 'gravacao.encerrada', { titulo: session.title }), allowedMentions: { parse: [] } });
+  const base = t(session.status === 'interrupted' ? 'gravacao.interrompida' : extra ? 'gravacao.encerrada_auto' : 'gravacao.encerrada', { titulo: session.title });
+  await user.send({ content: [base, extra].filter(Boolean).join('\n'), allowedMentions: { parse: [] } });
 });
 const guildControls = new GuildControls(client, ownerId, managedRoot, recorder);
 const transport: Transport = {
@@ -82,7 +93,7 @@ async function tick() {
       if (!group.every(item => item.state.retention && eligibleForDeletion(item.state.retention))) continue;
       try { if (await cleanupTranscript(group[0].path, managedRoot)) console.log('Transcrição com prazo vencido removida.'); } catch (e) { await logFailure('retention_cleanup', e); }
     }
-    await library.cleanupAudio();
+    await library.cleanupAudio(); await library.cleanupTranscripts();
     await guildControls.checkAll();
   } catch (e) { await logFailure('discord_queue', e); }
   finally { running = false; }

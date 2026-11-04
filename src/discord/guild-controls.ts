@@ -5,7 +5,11 @@ import { saveJson } from '../storage/json-state.ts';
 import { VoiceRecorder } from './voice-recorder.ts';
 import { t } from '../config/texts.ts';
 
-export type GuildConfig = { channelId: string; minimum: number; enabled: boolean };
+// afterSession: o que fazer sozinho quando a gravação termina (padrão: nada).
+export type AfterSession = 'nada' | 'transcrever' | 'transcrever_e_resumir';
+export type GuildConfig = { channelId: string; minimum: number; enabled: boolean; afterSession?: AfterSession };
+export const afterSessionOptions: AfterSession[] = ['nada', 'transcrever', 'transcrever_e_resumir'];
+const afterSessionText = (value: AfterSession) => t({ nada: 'pos_sessao.nada', transcrever: 'pos_sessao.transcrever', transcrever_e_resumir: 'pos_sessao.transcrever_e_resumir' }[value]);
 export const shouldLeaveGuild = (ownerPresent: boolean | undefined) => ownerPresent === false;
 export const canConfigure = (actor: string, owner: string) => actor === owner;
 export const shouldAutoJoin = (config: GuildConfig, channelId: string, humans: number, active: boolean) => config.enabled && config.channelId === channelId && humans >= config.minimum && !active;
@@ -16,7 +20,9 @@ export const wizardCommand = new SlashCommandBuilder().setName('wizard').setDesc
   .addSubcommand(s => s.setName('configurar').setDescription(t('comando.configurar'))
     .addChannelOption(o => o.setName('canal').setDescription(t('opcao.canal')).addChannelTypes(ChannelType.GuildVoice).setRequired(true))
     .addIntegerOption(o => o.setName('minimo').setDescription(t('opcao.minimo')).setMinValue(1).setMaxValue(99).setRequired(true))
-    .addBooleanOption(o => o.setName('automatico').setDescription(t('opcao.automatico')).setRequired(true)));
+    .addBooleanOption(o => o.setName('automatico').setDescription(t('opcao.automatico')).setRequired(true))
+    .addStringOption(o => o.setName('pos_sessao').setDescription(t('opcao.pos_sessao')).setRequired(false)
+      .addChoices(...afterSessionOptions.map(value => ({ name: afterSessionText(value), value })))));
 
 export class GuildControls {
   private cooldown = new Map<string, number>();
@@ -56,6 +62,7 @@ export class GuildControls {
     if (existing) await existing.edit(wizardCommand.toJSON());
     else await this.client.application.commands.create(wizardCommand.toJSON());
   }
+  afterSession(guildId: string): AfterSession { return this.configs.get(guildId)?.afterSession ?? 'nada'; }
   async command(interaction: ChatInputCommandInteraction) {
     if (interaction.commandName !== 'wizard' || !interaction.inGuild()) return;
     await interaction.deferReply({ flags: 64 });
@@ -68,9 +75,13 @@ export class GuildControls {
         const selected = interaction.options.getChannel('canal', true), minimum = interaction.options.getInteger('minimo', true), enabled = interaction.options.getBoolean('automatico', true);
         const channel = await guild.channels.fetch(selected.id);
         if (channel?.type !== ChannelType.GuildVoice || !channel.permissionsFor(member)?.has('ViewChannel')) throw new Error(t('erro.canal_invalido'));
-        const config = { channelId: channel.id, minimum, enabled };
+        // Sem escolher pos_sessao, mantém o que já estava configurado.
+        const chosen = interaction.options.getString('pos_sessao') as AfterSession | null;
+        const afterSession = chosen && afterSessionOptions.includes(chosen) ? chosen : this.afterSession(guild.id);
+        const config: GuildConfig = { channelId: channel.id, minimum, enabled, afterSession };
         await saveJson(join(this.root, 'servidores', guild.id + '.json'), config); this.configs.set(guild.id, config); this.suppressed.delete(guild.id);
-        await interaction.editReply(t('comando.auto_configurado', { estado: t(enabled ? 'comando.ativada' : 'comando.desativada'), canal: `<#${channel.id}>`, minimo: minimum }));
+        await interaction.editReply(t('comando.auto_configurado', { estado: t(enabled ? 'comando.ativada' : 'comando.desativada'), canal: `<#${channel.id}>`, minimo: minimum })
+          + ' ' + t('status.pos_sessao', { opcao: afterSessionText(afterSession) }));
         if (enabled) void this.evaluate(channel).catch(() => {});
       } else if (action === 'entrar') {
         const channel = member.voice.channel;
@@ -85,7 +96,8 @@ export class GuildControls {
       } else {
         const active = this.recorder.active.get(guild.id), config = this.configs.get(guild.id);
         await interaction.editReply([active ? t('status.gravando', { canal: `<#${active.channelId}>` }) : t('status.sem_gravacao'),
-          config?.enabled ? t('status.auto', { canal: `<#${config.channelId}>`, minimo: config.minimum }) + (this.suppressed.has(guild.id) ? ' ' + t('status.pausado') : '') : t('status.auto_desligado')].join(' '));
+          config?.enabled ? t('status.auto', { canal: `<#${config.channelId}>`, minimo: config.minimum }) + (this.suppressed.has(guild.id) ? ' ' + t('status.pausado') : '') : t('status.auto_desligado'),
+          t('status.pos_sessao', { opcao: afterSessionText(this.afterSession(guild.id)) })].join(' '));
       }
     } catch (e) { const err = e as NodeJS.ErrnoException; await interaction.editReply(err.code ? t('erro.falha_comando') : err.message); }
   }

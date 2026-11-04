@@ -15,7 +15,7 @@ function sources(dir: string): string[] {
 const code = sources(join(root, 'src')).map(p => readFileSync(p, 'utf8')).join('\n');
 const used = new Set([...code.matchAll(/\bt\('([a-z_.]+)'/g)].map(m => m[1]));
 // Chaves escolhidas com ? : dentro de t(...) também contam.
-for (const m of code.matchAll(/'((?:dm|menu|botao|sessoes|sessao|arquivo|fila|confirmacao|gravacao|comando|opcao|status|erro|entrega|decisao)\.[a-z_]+)'/g)) used.add(m[1]);
+for (const m of code.matchAll(/'((?:dm|menu|botao|sessoes|sessao|arquivo|fila|confirmacao|gravacao|comando|opcao|status|erro|entrega|decisao|pos_sessao)\.[a-z_]+)'/g)) used.add(m[1]);
 
 test('textos.txt e ajustes.txt estão no formato "chave = texto"', () => {
   assert.ok(texts.size > 50);

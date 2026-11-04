@@ -73,9 +73,9 @@ Este é o checklist único do projeto. A tabela acima resume as etapas; `CONTINU
 - [x] Definir como a coleção oficial do PC recebe as aprovações feitas pela produção: download manual pelo Discord.
 
 - [x] Definir a política de retenção com o dono (28/10/2026): prazo único de 7 dias para áudio e transcrições (o dono costuma resumir logo após a sessão); resumos e coleção para sempre. Ver "Política de retenção decidida" em CONTINUIDADE.md.
-- [ ] Implementar a política de 7 dias (NÃO iniciado; o dono pediu só o planejamento): áudio transcrito (hoje 14), áudio nunca transcrito, transcrição sem resumo e transcrição com resumo passam todos a expirar em 7 dias; testar com arquivos fictícios.
+- [x] Implementar a política de 7 dias (04/11/2026, testes com arquivos fictícios; `dias_guarda` em config/ajustes.txt). Falta publicar na VPS e validar em uso real.
 - [x] Definir tratamento de classificação incerta/falso negativo: o bot pergunta ao dono (botões) em vez de bloquear sozinho.
-- [ ] Pós-sessão automático (planejado, NÃO iniciado): nova opção em `/wizard configurar` para, quando a gravação terminar porque o canal esvaziou, já pedir transcrição (e opcionalmente resumo). Desligado por padrão. Ver "Pós-sessão automático" em CONTINUIDADE.md.
+- [x] Pós-sessão automático (04/11/2026): opção `pos_sessao` em `/wizard configurar`, desligada por padrão; testes simulados. Falta publicar na VPS e validar numa sessão real.
 - [ ] Futuro: perfis/formatos e botões separados por mesa.
 - [ ] Futuro: avaliar identificação de falantes, gravações simultâneas e backup externo.
 
@@ -94,6 +94,6 @@ Este é o checklist único do projeto. A tabela acima resume as etapas; `CONTINU
 - Recepção de áudio/DAVE precisa de teste real; a biblioteca não garante estabilidade dessa API não documentada pelo Discord.
 - Gravação mista, sem identificação de falantes; uma sessão simultânea, máximo padrão de 6 h.
 - Classificação por IA é probabilística. Limite 0,90 e evidências reduzem aceitação indevida, mas não provam infalibilidade; pode bloquear uma sessão real curta/sem referências conhecidas.
-- Política decidida e ainda não implementada: tudo de áudio/transcrição expira em 7 dias. Até a implementação, valem os prazos atuais (áudio transcrito 14 dias; TXT com resumo 7 dias; TXT sem resumo e áudio não transcrito preservados).
+- Áudio e transcrições expiram em 7 dias (implementado no PC em 04/11/2026; até publicar, a VPS segue os prazos antigos: áudio transcrito 14 dias, TXT sem resumo e áudio não transcrito preservados).
 - Gerações interrompidas exigem novo pedido. Locks remanescentes de queda abrupta podem exigir manutenção após verificar o processo antigo.
 - Suporte a várias mesas, separação de falantes, gravação de canais simultâneos e backup externo automático não estão implementados.

@@ -71,7 +71,8 @@ export class PrivateMenu {
     if (session.status === 'interrupted') lines.push(t('sessao.interrompida'));
     if (confirm) lines.push(t('sessao.pergunta_mesa'));
     if (notCampaign) lines.push(t('sessao.nao_e_mesa'));
-    if (session.audioExpiresAt) lines.push(t('sessao.audio_ate', { data: localDate(session.audioExpiresAt) }));
+    if (session.audioExpiresAt && files.audio.length) lines.push(t('sessao.audio_ate', { data: localDate(session.audioExpiresAt) }));
+    if (session.transcriptExpiresAt && files.transcript && !files.summary) lines.push(t('sessao.transcricao_ate', { data: localDate(session.transcriptExpiresAt) }));
     if (!downloads.length && !actions.length && !confirm) lines.push(t('sessao.sem_arquivos'));
     const components = [];
     if (downloads.length) components.push(row(...downloads));

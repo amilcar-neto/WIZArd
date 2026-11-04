@@ -36,6 +36,8 @@ Exemplos rápidos:
 
 - `fuso`: fuso horário usado nos nomes das sessões.
 - `esperar_streamamigos`: `sim` faz transcrições e resumos esperarem o StreamAmigos ficar sem salas abertas (e pausarem se alguém abrir uma sala no meio). `não` desliga isso.
+- `dias_guarda`: por quantos dias guardar áudio e transcrições sem resumo (padrão 7). Resumos e coleção ficam para sempre.
+- `pos_sessao_minimo_minutos`: no pós-sessão automático, gravações mais curtas que isso só são transcritas, nunca resumidas sozinhas (padrão 5).
 
 ## Vocabulário da transcrição — `config/vocabulario.txt`
 

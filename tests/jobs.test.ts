@@ -47,7 +47,7 @@ test('conclusão da transcrição atualiza catálogo, notifica e arma retenção
     return { code: 0, stdout: '', stderr: '' };
   } });
   await jobs.enqueue(session.id, 'transcribe'); await jobs.tick(); await jobs.tick();
-  const updated = await library.get(session.id); assert.ok(updated?.transcript); assert.ok(updated?.audioExpiresAt);
+  const updated = await library.get(session.id); assert.ok(updated?.transcript); assert.ok(updated?.audioExpiresAt); assert.ok(updated?.transcriptExpiresAt && updated.transcriptHash);
   assert.equal(calls, 1); assert.equal(notifications.length, 1); assert.equal(notifications[0].status, 'done');
   assert.equal(await readFile(updated!.transcript!, 'utf8'), 'Transcrição fictícia do teste.');
 });
@@ -152,4 +152,38 @@ test('resumo recebe glossário e referências gerados da coleção', async t => 
   } });
   await jobs.enqueue(session.id, 'summarize'); await jobs.tick();
   assert.match(got.glossary, /Zorvak/); assert.deepEqual(got.references, ['Zorvak']);
+});
+
+const transcriber = { run: async (_file: string, args: string[]) => { await writeFile(args[args.indexOf('--output') + 1], 'Transcrição fictícia.'); return { code: 0, stdout: '', stderr: '' }; } };
+async function ended(library: SessionLibrary, session: any, minutes: number, status = 'ready') {
+  session.status = status; session.endedAt = new Date(Date.parse(session.startedAt) + minutes * 60000).toISOString(); await library.save(session);
+}
+test('pós-sessão "transcrever e resumir": transcreve e já pede o resumo sozinho', async t => {
+  const { library, session } = await fixture(t), notifications: any[] = []; let summaries = 0;
+  const jobs = new SessionJobs(library, async job => { notifications.push({ ...job }); }, { ...transcriber as any, summarize: async (o: any) => {
+    summaries++; await mkdir(library.summaries, { recursive: true }); await writeFile(o.output, '# Resumo fictício'); return {} as any;
+  } });
+  await ended(library, session, 60);
+  assert.deepEqual(await jobs.afterRecording(session.id, true), { summarize: true });
+  await jobs.tick();
+  assert.equal(notifications[0].action, 'transcribe'); assert.equal(notifications[0].autoSummary, true);
+  assert.equal((await library.get(session.id))?.autoSummarize, undefined);
+  await jobs.tick(); assert.equal(summaries, 1); assert.equal(notifications[1].action, 'summarize');
+});
+test('pós-sessão: gravação curta ou interrompida só transcreve; "transcrever" nunca resume', async t => {
+  for (const [minutes, status, both] of [[2, 'ready', true], [60, 'interrupted', true], [60, 'ready', false]] as const) {
+    const { library, session } = await fixture(t), notifications: any[] = []; let summaries = 0;
+    const jobs = new SessionJobs(library, async job => { notifications.push({ ...job }); }, { ...transcriber as any, summarize: async () => { summaries++; return {} as any; } });
+    await ended(library, session, minutes, status);
+    assert.deepEqual(await jobs.afterRecording(session.id, both), { summarize: false });
+    await jobs.tick(); await jobs.tick();
+    assert.equal(notifications.length, 1); assert.equal(notifications[0].status, 'done'); assert.ok(!notifications[0].autoSummary); assert.equal(summaries, 0);
+  }
+});
+test('pós-sessão: transcrição falhou, resumo automático é cancelado', async t => {
+  const { library, session } = await fixture(t), notifications: any[] = [];
+  const jobs = new SessionJobs(library, async job => { notifications.push({ ...job }); }, { run: async () => ({ code: 1, stdout: '', stderr: '' }) });
+  await ended(library, session, 60); await jobs.afterRecording(session.id, true); await jobs.tick();
+  assert.equal(notifications[0].status, 'failed'); assert.equal((await library.get(session.id))?.autoSummarize, undefined);
+  await assert.rejects(access(join(library.root, 'tarefas', session.id + '-summarize.json')));
 });

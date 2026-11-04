@@ -50,3 +50,21 @@ test('anexos grandes divididos conservam bytes e português', () => {
   assert.deepEqual(Buffer.concat(parts), original); assert.ok(parts.every(p => p.length <= 31));
   assert.equal(parts.map(p => p.toString('utf8')).join(''), original.toString('utf8'));
 });
+test('dono configura o pós-sessão; sem escolher, a opção anterior é mantida', async ctx => {
+  const { mkdtemp, rm, readFile } = await import('node:fs/promises'), { join } = await import('node:path'), { tmpdir } = await import('node:os');
+  const root = await mkdtemp(join(tmpdir(), 'wizard-controls-')); ctx.after(() => rm(root, { recursive: true, force: true }));
+  const owner = { id: '123', voice: { channelId: null } }, channel = { id: '20', type: 2, permissionsFor: () => ({ has: () => true }), members: new Map() };
+  const guild = { id: '1', ownerId: '123', members: { fetch: async () => owner }, channels: { fetch: async () => channel } };
+  const controls = new GuildControls({ guilds: { fetch: async () => guild } } as any, '123', root, { active: new Map() } as any);
+  const replies: string[] = [];
+  const configure = (posSessao: string | null) => ({ commandName: 'wizard', inGuild: () => true, guildId: '1', user: { id: '123' }, deferReply: async () => {}, editReply: async (s: string) => replies.push(s),
+    options: { getSubcommand: () => 'configurar', getChannel: () => channel, getInteger: () => 3, getBoolean: () => false, getString: () => posSessao } }) as any;
+  await (await import('node:fs/promises')).mkdir(join(root, 'servidores'));
+  assert.equal(controls.afterSession('1'), 'nada');
+  await controls.command(configure('transcrever_e_resumir')); assert.equal(controls.afterSession('1'), 'transcrever_e_resumir');
+  await controls.command(configure(null)); assert.equal(controls.afterSession('1'), 'transcrever_e_resumir');
+  assert.equal(JSON.parse(await readFile(join(root, 'servidores', '1.json'), 'utf8')).afterSession, 'transcrever_e_resumir');
+  assert.ok(replies[1].includes(t('pos_sessao.transcrever_e_resumir')));
+  const choices = (wizardCommand.toJSON().options as any[]).find(o => o.name === 'configurar').options.find((o: any) => o.name === 'pos_sessao').choices;
+  assert.deepEqual(choices.map((c: any) => c.value), ['nada', 'transcrever', 'transcrever_e_resumir']);
+});

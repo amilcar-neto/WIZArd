@@ -44,7 +44,7 @@ npm.cmd run bot
 
 O `.env.example` documenta as configurações. Token e proprietário ficam somente no `.env` privado. Voz exige FFmpeg e as dependências de `voice-runtime/`; transcrição exige Python e `scripts/requirements.txt` em um ambiente isolado. O serviço systemd preparado em `deploy/` evita iniciar manualmente após cada reinício, depois da instalação na VPS.
 
-Envie qualquer mensagem na DM para abrir o menu. Só o proprietário recebe botões e arquivos. Membros podem usar `/wizard entrar` no próprio canal; apenas o dono usa `/wizard configurar` para definir canal, mínimo de humanos e entrada automática.
+Envie qualquer mensagem na DM para abrir o menu. Só o proprietário recebe botões e arquivos. Membros podem usar `/wizard entrar` no próprio canal; apenas o dono usa `/wizard configurar` para definir canal, mínimo de humanos, entrada automática e o pós-sessão (transcrever, ou transcrever e resumir, sozinho quando a gravação termina).
 
 ## Reconhecimento da mesa
 
@@ -68,6 +68,6 @@ npm.cmd run historico -- dados/resumos/sessao.md --confirmar
 
 `dados/`, `.env`, formatos reais e imagens pessoais não são publicados. Resumos e coleção são preservados; inclusão faz backup e evita duplicatas. Novas entregas de resumo usam uma única mensagem com Markdown e botões. Entregas antigas em andamento conservam o protocolo anterior para poder retomar.
 
-TXT segue a regra existente: 7 dias após entrega completa do resumo na DM, respeitando `--manter-transcricao`. Conversas/testes sem resumo ainda não têm prazo automático de exclusão de TXT. Áudio expira 14 dias após a transcrição pronta, com validação de hash e existência de transcrição ou resumo; áudio ainda não transcrito é preservado. Os prazos e essa limitação estão registrados no cronograma para revisão após o primeiro teste real.
+Prazo único de 7 dias (`dias_guarda` em `config/ajustes.txt`), sempre com validação de hash e caminho: áudio expira 7 dias após o fim da gravação, ou após a transcrição se ela vier depois; transcrição sem resumo (conversa, teste, outra mesa) expira 7 dias após ficar pronta; transcrição com resumo expira 7 dias após a entrega completa do resumo na DM, respeitando `--manter-transcricao`. Pedido de transcrição ou resumo na fila impede a exclusão. Resumos e coleção nunca são apagados.
 
 A gravação salva a mistura (para download) e uma faixa por pessoa (para a transcrição com nomes), com partes de aproximadamente 15 minutos. A implementação limita a uma gravação simultânea e 6 horas por padrão. Pedidos de transcrição/resumo são persistidos e processados um por vez; pedidos interrompidos por reinício exigem novo pedido explícito.

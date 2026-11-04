@@ -32,7 +32,7 @@ Antes de trabalhar, leia `docs/CONTINUIDADE.md` e `docs/CRONOGRAMA.md`. Ambos s�
 - Na VPS o dono opera com o comando `wizard` (`on`, `off`, `restart`, `status`, `logs`, `login`, `versao`, `versoes`, `voltar`, `help`).
 - A chave SSH tem senha. Não registrar a senha em arquivos. Para deploy sem interação, o usuário precisa deixar a chave carregada num ssh-agent.
 - Não rodar o bot local com o mesmo token enquanto a produção estiver ligada.
-- Coleção oficial da Serpente: `%USERPROFILE%/Downloads/serpente de duas cabeças/Transcricoes_Completas_Sessoes.md` no PC. `dados/Transcricoes_Completas_Sessoes.md` faz parte só do fluxo da Serpente e deve ser desconsiderado em outras mesas/fluxos. Não apagar nem mesclar.
+- Coleção oficial da Serpente: `%USERPROFILE%/Downloads/serpente de duas cabeças/Transcricoes_Completas_Sessoes.md` no PC. A cópia avulsa `dados/Transcricoes_Completas_Sessoes.md` (só uma versão da sessão 11) foi apagada pelo dono em 04/11/2026; a coleção da VPS fica em `dados/colecao/`. Não mesclar coleções.
 - Decisão do dono (28/10/2026): a VPS mantém a própria cópia da coleção (`/opt/wizard/dados/colecao/...`). Não sincronizar automaticamente VPS → PC nem PC → VPS. O dono baixa a coleção pelo Discord (enviada após aprovação ou pelo menu) e substitui o arquivo oficial manualmente.
 
 ## Textos e ajustes editáveis

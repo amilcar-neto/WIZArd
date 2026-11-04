@@ -1,14 +1,16 @@
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { saveJson, withState } from '../storage/json-state.ts';
-import { SessionLibrary, managedFile, type Session } from './library.ts';
+import { SessionLibrary, managedFile, retentionDays, type Session } from './library.ts';
 import { runProcess, type Selection } from '../summaries/providers.ts';
 import { summarize } from '../summaries/summarize.ts';
 import { queueCollection } from '../collection/queue.ts';
 import { t, setting, enabled } from '../config/texts.ts';
 import { campaignContext } from './campaign-glossary.ts';
 
-export type Job = { sessionId: string; action: 'transcribe' | 'summarize'; status: 'queued' | 'running' | 'done' | 'failed' | 'interrupted' | 'blocked'; requestedAt: string; finishedAt?: string; notified?: boolean };
+export type Job = { sessionId: string; action: 'transcribe' | 'summarize'; status: 'queued' | 'running' | 'done' | 'failed' | 'interrupted' | 'blocked'; requestedAt: string; finishedAt?: string; notified?: boolean;
+  // Pós-sessão automático: a transcrição terminou e o resumo já foi pedido sozinho.
+  autoSummary?: boolean };
 type Workers = { run?: typeof runProcess; summarize?: typeof summarize; busy?: () => Promise<boolean>; pollMs?: number };
 
 // O servidor está ocupado quando o StreamAmigos tem sala aberta (config/ajustes.txt).
@@ -57,6 +59,19 @@ export class SessionJobs {
       Object.assign(job, { sessionId: id, action, status: 'queued', requestedAt: new Date().toISOString(), notified: false });
       delete job.finishedAt; await save(); return { queued: true };
     });
+  }
+  // Pós-sessão automático (opção do servidor em /wizard configurar). Gravação curta ou interrompida
+  // nunca é resumida sozinha, para não resumir testes; a transcrição segue a configuração.
+  async afterRecording(id: string, summarizeToo: boolean) {
+    const session = await this.library.get(id);
+    if (!session || session.status === 'recording') throw new Error(t('erro.sessao_nao_encontrada'));
+    const minutes = Number(setting('pos_sessao_minimo_minutos', '5'));
+    const length = Date.parse(session.endedAt ?? '') - Date.parse(session.startedAt);
+    const summarize = summarizeToo && session.status === 'ready' && length >= minutes * 60000;
+    if (summarize) { session.autoSummarize = true; await this.library.save(session); }
+    try { await this.enqueue(id, 'transcribe'); }
+    catch (e) { if (summarize) { delete session.autoSummarize; await this.library.save(session); } throw e; }
+    return { summarize };
   }
   // Resposta do dono à pergunta "é Serpente?". Sim: libera e já pede o resumo. Não: só registra.
   async confirmCampaign(id: string, isCampaign: boolean) {
@@ -136,7 +151,8 @@ export class SessionJobs {
             if (result.code !== 0) throw new Error('Transcrição falhou.');
           }
           session.transcript = transcript; await this.library.save(session);
-          await this.library.armAudioRetention(session, Number(process.env.WIZARD_AUDIO_RETENTION_DAYS ?? 14));
+          const days = retentionDays();
+          await this.library.armTranscriptRetention(session, days); await this.library.armAudioRetention(session, days);
         } else {
           if (!files.transcript) throw new Error('Transcrição indisponível.');
           const output = join(this.library.summaries, session.id + '.md'), context = await this.context();
@@ -147,12 +163,18 @@ export class SessionJobs {
           session.summary = output; await this.library.save(session);
         }
         job.status = 'done';
+        if (job.action === 'transcribe' && session.autoSummarize) job.autoSummary = true;
       } catch (e) {
         job.status = (e as NodeJS.ErrnoException).code === 'WIZARD_CAMPAIGN_MISMATCH' ? 'blocked' : 'failed';
         if (job.status === 'blocked' && session) {
           const result = JSON.parse(await readFile(join(this.library.summaries, session.id + '.md.classification.json'), 'utf8'));
           session.classification = { category: result.category, accepted: false, confidence: result.confidence }; await this.library.save(session);
         }
+      }
+      // O pedido automático vale uma vez só: se a transcrição falhar, o resumo volta a ser manual.
+      if (job.action === 'transcribe' && session?.autoSummarize) { delete session.autoSummarize; await this.library.save(session); }
+      if (job.autoSummary && session) {
+        try { await this.enqueue(session.id, 'summarize'); } catch { job.autoSummary = false; }
       }
       job.finishedAt = new Date().toISOString(); await saveJson(path, job);
       await this.notify(job, session); job.notified = true; await saveJson(path, job);

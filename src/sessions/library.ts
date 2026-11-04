@@ -3,7 +3,7 @@ import { resolve, join, relative, isAbsolute, basename } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { saveJson } from '../storage/json-state.ts';
 import { queueFiles } from '../storage/queue-files.ts';
-import { t } from '../config/texts.ts';
+import { t, setting } from '../config/texts.ts';
 import { localDate, localTime } from '../config/time.ts';
 
 export type Session = {
@@ -14,10 +14,22 @@ export type Session = {
   classification?: { category: string; accepted: boolean; confidence: number; ownerDecision?: 'yes' | 'no' };
   // Uma faixa por pessoa; offset = segundos desde o início da gravação. Usada para pôr nomes na transcrição.
   speakers?: Speaker[];
+  // Transcrição sem resumo expira dias_guarda depois de pronta (o hash impede apagar arquivo trocado).
+  transcriptReadyAt?: string; transcriptHash?: string; transcriptExpiresAt?: string; transcriptDeletedAt?: string;
+  // Pós-sessão automático: depois da transcrição, pedir o resumo sozinho.
+  autoSummarize?: boolean;
 };
 export type Speaker = { userId: string; name: string; file: string; offset: number; complete: boolean };
 // Tudo o que é áudio da sessão: partes misturadas (para baixar) e faixas por pessoa.
 const audioPaths = (s: Session) => [...s.audio, ...(s.speakers ?? []).map(t => t.file)];
+const DAY = 86400000;
+// Prazo único de guarda do áudio e da transcrição sem resumo (config/ajustes.txt, padrão 7 dias).
+export function retentionDays() {
+  const days = Number(setting('dias_guarda', '7'));
+  if (!Number.isSafeInteger(days) || days < 1 || days > 365) throw new Error('config/ajustes.txt: dias_guarda deve ser um número inteiro de 1 a 365.');
+  return days;
+}
+const sha256 = async (path: string) => createHash('sha256').update(await readFile(path)).digest('hex');
 export const fileId = (path: string) => createHash('sha256').update(resolve(path)).digest('hex').slice(0, 32);
 export async function managedFile(root: string, path?: string): Promise<string | undefined> {
   if (!path) return;
@@ -88,29 +100,72 @@ export class SessionLibrary {
     const dir = join(this.sessions, id);
     return (await readdir(dir)).filter(n => /^audio-\d+\.ogg$/.test(n)).sort().map(n => join(dir, n));
   }
-  async armAudioRetention(session: Session, days: number) {
-    if (!Number.isSafeInteger(days) || days < 1 || days > 365) throw new Error('Retenção de áudio deve ser de 1 a 365 dias.');
-    if (session.audioExpiresAt) return;
-    session.audioHashes = {};
-    for (const file of audioPaths(session)) {
-      if (!await managedFile(this.root, file)) continue;
-      session.audioHashes[file] = createHash('sha256').update(await readFile(file)).digest('hex');
-    }
-    session.audioExpiresAt = new Date(Date.now() + days * 86400000).toISOString(); await this.save(session);
+  // Pedido na fila ou rodando impede apagar os arquivos da sessão.
+  async pendingJob(id: string, action: 'transcribe' | 'summarize') {
+    try { return ['queued', 'running'].includes(JSON.parse(await readFile(join(this.root, 'tarefas', `${id}-${action}.json`), 'utf8')).status); }
+    catch (e) { if ((e as NodeJS.ErrnoException).code === 'ENOENT') return false; throw e; }
   }
-  async cleanupAudio(now = Date.now()) {
+  // Grava só os campos da retenção sobre a versão mais recente do arquivo, para não desfazer
+  // o que a fila de tarefas salvou ao mesmo tempo (transcrição, resumo, classificação).
+  private async patch(session: Session, fields: Partial<Session>) {
+    Object.assign(session, fields);
+    let fresh: Session;
+    try { fresh = JSON.parse(await readFile(this.path(session.id), 'utf8')); }
+    catch (e) { if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e; fresh = session; }
+    await this.save(Object.assign(fresh, fields));
+  }
+  // O prazo conta a partir de "from" e nunca é encurtado: transcrever depois da gravação adia a exclusão.
+  async armAudioRetention(session: Session, days: number, from = Date.now()) {
+    if (!Number.isSafeInteger(days) || days < 1 || days > 365) throw new Error('Retenção de áudio deve ser de 1 a 365 dias.');
+    const hashes = { ...session.audioHashes };
+    for (const file of audioPaths(session)) {
+      if (hashes[file] || !await managedFile(this.root, file)) continue;
+      hashes[file] = await sha256(file);
+    }
+    const deadline = from + days * DAY, current = Date.parse(session.audioExpiresAt ?? '');
+    await this.patch(session, { audioHashes: hashes, audioExpiresAt: current >= deadline ? session.audioExpiresAt : new Date(deadline).toISOString() });
+  }
+  async armTranscriptRetention(session: Session, days: number, from = Date.now()) {
+    const transcript = await managedFile(this.root, session.transcript);
+    if (!transcript) return;
+    await this.patch(session, { transcriptReadyAt: new Date(from).toISOString(), transcriptHash: await sha256(transcript), transcriptExpiresAt: new Date(from + days * DAY).toISOString() });
+  }
+  // Áudio (transcrito ou não) expira no prazo. Gravações antigas sem prazo ganham pelo menos 1 dia de carência.
+  async cleanupAudio(now = Date.now(), days = retentionDays()) {
     for (const session of await this.list()) {
-      if (session.status === 'recording' || session.audioDeletedAt || !session.audioExpiresAt || !Number.isFinite(Date.parse(session.audioExpiresAt)) || Date.parse(session.audioExpiresAt) > now) continue;
-      // Áudio sem transcrição preservada não é apagado automaticamente.
-      const transcript = await managedFile(this.root, session.transcript);
-      if (!transcript && !await managedFile(this.root, session.summary)) continue;
+      if (session.status === 'recording' || session.audioDeletedAt || !audioPaths(session).length) continue;
+      if (!session.audioExpiresAt) {
+        const ended = Date.parse(session.endedAt ?? '');
+        if (!Number.isFinite(ended)) continue;
+        await this.armAudioRetention(session, days, Math.max(ended, now - days * DAY + DAY)); continue;
+      }
+      if (!(Date.parse(session.audioExpiresAt) <= now) || await this.pendingJob(session.id, 'transcribe')) continue;
       for (const path of audioPaths(session)) {
         const safe = await managedFile(this.root, path);
-        if (!safe) continue;
-        const actual = createHash('sha256').update(await readFile(safe)).digest('hex');
-        if (actual === session.audioHashes?.[path]) await unlink(safe);
+        if (safe && session.audioHashes?.[path] && await sha256(safe) === session.audioHashes[path]) await unlink(safe);
       }
-      if (!(await this.available(session)).audio.length) { session.audioDeletedAt = new Date(now).toISOString(); await this.save(session); }
+      if (!(await this.available(session)).audio.length) await this.patch(session, { audioDeletedAt: new Date(now).toISOString() });
+    }
+  }
+  // Transcrição sem resumo (conversa, teste, não é a mesa) expira no prazo. Com resumo vale o recibo do resumo.
+  // Só transcrições feitas pelo bot, dentro da pasta da própria sessão.
+  async cleanupTranscripts(now = Date.now(), days = retentionDays()) {
+    for (const listed of await this.list()) {
+      if (listed.status === 'recording' || listed.transcriptDeletedAt || !/^[a-f0-9]{32}$/.test(listed.id)) continue;
+      let session: Session;
+      try { session = JSON.parse(await readFile(this.path(listed.id), 'utf8')); }
+      catch (e) { if ((e as NodeJS.ErrnoException).code === 'ENOENT') continue; throw e; }
+      const transcript = await managedFile(join(this.sessions, session.id), session.transcript);
+      if (!transcript || await managedFile(this.root, session.summary) || await this.pendingJob(session.id, 'summarize')) continue;
+      if (!session.transcriptExpiresAt || !session.transcriptHash) {
+        const ready = Date.parse(session.transcriptReadyAt ?? '') || (await lstat(transcript)).mtimeMs;
+        await this.armTranscriptRetention(session, days, Math.max(ready, now - days * DAY + DAY)); continue;
+      }
+      if (!(Date.parse(session.transcriptExpiresAt) <= now) || await sha256(transcript) !== session.transcriptHash) continue;
+      // Confere de novo logo antes de apagar: um resumo pode ter sido pedido enquanto o hash era calculado.
+      if (await this.pendingJob(session.id, 'summarize') || (JSON.parse(await readFile(this.path(session.id), 'utf8')) as Session).summary) continue;
+      await unlink(transcript);
+      await this.patch(session, { transcriptDeletedAt: new Date(now).toISOString() });
     }
   }
 }
