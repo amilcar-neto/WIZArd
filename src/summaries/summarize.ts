@@ -64,7 +64,7 @@ export async function summarize(o: Options) {
     if (classification.transcriptHash !== inputHash || classification.policyVersion !== CAMPAIGN_POLICY_VERSION) classification = undefined;
   }
   if (!classification) {
-    classification = await (o.classifier ?? classifyTranscript)({ transcript, selection, model: o.model, timeoutMs, references: o.references });
+    classification = await (o.classifier ?? classifyTranscript)({ transcript, selection, model: o.model, timeoutMs, references: o.references, onFallback: o.onFallback });
     await mkdir(dirname(output), { recursive: true }); await saveJson(classificationPath, classification);
   }
   // O dono pode confirmar pelo Discord que é a mesa mesmo quando a IA ficou em dúvida.

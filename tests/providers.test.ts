@@ -46,4 +46,7 @@ test('processo recebe stdin com caracteres e metacaracteres sem shell', async ()
 });
 test('timeout encerra o processo e não retorna texto parcial', async () => {
   await assert.rejects(runProcess(process.execPath, ['-e', 'setTimeout(()=>{},60000)'], '', tmpdir(), 200), (e: any) => e.code === 'WIZARD_TIMEOUT');
+});test('mensagens de login expirado viram motivo "auth"', () => {
+  for (const stderr of ['Your refresh token has expired. Please log out and sign in again.', 'Invalid API key · Please run /login', 'unexpected status 401 Unauthorized'])
+    assert.throws(() => parseResult('codex', { code: 1, stdout: '', stderr }), e => e instanceof ProviderError && e.reason === 'auth', stderr);
 });

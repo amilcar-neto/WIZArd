@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { SessionLibrary } from '../src/sessions/library.ts';
 import { SessionJobs } from '../src/sessions/jobs.ts';
 import { t } from '../src/config/texts.ts';
+import { ProviderError } from '../src/summaries/providers.ts';
 const same = (key: string) => (e: any) => String(e?.message ?? e).includes(t(key));
 
 // Coleção fictícia: os testes nunca leem a coleção real.
@@ -186,4 +187,21 @@ test('pós-sessão: transcrição falhou, resumo automático é cancelado', asyn
   await ended(library, session, 60); await jobs.afterRecording(session.id, true); await jobs.tick();
   assert.equal(notifications[0].status, 'failed'); assert.equal((await library.get(session.id))?.autoSummarize, undefined);
   await assert.rejects(access(join(library.root, 'tarefas', session.id + '-summarize.json')));
+});
+test('login expirado: o aviso de falha diz qual IA e por quê; reserva usada também é avisada', async t => {
+  const { library, session } = await fixture(t), notifications: any[] = [];
+  session.transcript = join(library.sessions, session.id, 'transcricao.txt'); await writeFile(session.transcript, 'Sessão fictícia.'); await library.save(session);
+  let attempt = 0;
+  const jobs = new SessionJobs(library, async job => { notifications.push({ ...job }); }, { summarize: async options => {
+    options.onFallback?.('codex', 'auth');
+    if (attempt++ === 0) throw new ProviderError('claude', 'auth');
+    await mkdir(library.summaries, { recursive: true }); await writeFile(options.output, '# Resumo fictício\n');
+    return { output: options.output, resumed: false, provider: 'claude' };
+  } });
+  await jobs.enqueue(session.id, 'summarize'); await jobs.tick();
+  assert.equal(notifications[0].status, 'failed'); assert.equal(notifications[0].reason, 'auth'); assert.equal(notifications[0].provider, 'claude');
+  assert.deepEqual(notifications[0].fallback, { provider: 'codex', reason: 'auth' });
+  // Novo pedido não herda o motivo antigo.
+  await jobs.enqueue(session.id, 'summarize'); await jobs.tick();
+  assert.equal(notifications[1].status, 'done'); assert.equal(notifications[1].reason, undefined); assert.deepEqual(notifications[1].fallback, { provider: 'codex', reason: 'auth' });
 });

@@ -72,7 +72,7 @@ async function executable(provider: Provider) {
 }
 function failure(provider: Provider, detail: string) {
   if (/usage.?limit|rate.?limit|quota|limit.?reached|hit your limit|out of.*credits|insufficient.*credits|too many requests/i.test(detail)) return new ProviderError(provider, 'limit');
-  if (/not logged|not authenticated|authentication|unauthorized|please.*log.?in|login required|token.*expired|invalid.*token|run.*login/i.test(detail)) return new ProviderError(provider, 'auth');
+  if (/not logged|not authenticated|authentication|unauthorized|please.*log.?in|login required|token.*expired|invalid.*token|run.*login|\/login|sign.?in again|log.?in again|\b401\b/i.test(detail)) return new ProviderError(provider, 'auth');
   return new ProviderError(provider, 'failed');
 }
 export function parseResult(provider: Provider, result: Result): string {

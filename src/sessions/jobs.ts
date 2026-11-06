@@ -2,7 +2,7 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { saveJson, withState } from '../storage/json-state.ts';
 import { SessionLibrary, managedFile, retentionDays, type Session } from './library.ts';
-import { runProcess, type Selection } from '../summaries/providers.ts';
+import { runProcess, ProviderError, type Provider, type Selection } from '../summaries/providers.ts';
 import { summarize } from '../summaries/summarize.ts';
 import { queueCollection } from '../collection/queue.ts';
 import { t, setting, enabled } from '../config/texts.ts';
@@ -10,7 +10,9 @@ import { campaignContext } from './campaign-glossary.ts';
 
 export type Job = { sessionId: string; action: 'transcribe' | 'summarize'; status: 'queued' | 'running' | 'done' | 'failed' | 'interrupted' | 'blocked'; requestedAt: string; finishedAt?: string; notified?: boolean;
   // Pós-sessão automático: a transcrição terminou e o resumo já foi pedido sozinho.
-  autoSummary?: boolean };
+  autoSummary?: boolean;
+  // Por que a IA falhou (ex.: login expirado) e se a reserva teve de ser usada, para o aviso ao dono.
+  reason?: ProviderError['reason']; provider?: Provider; fallback?: { provider: Provider; reason: string } };
 type Workers = { run?: typeof runProcess; summarize?: typeof summarize; busy?: () => Promise<boolean>; pollMs?: number };
 
 // O servidor está ocupado quando o StreamAmigos tem sala aberta (config/ajustes.txt).
@@ -136,6 +138,7 @@ export class SessionJobs {
       const next = jobs.filter(j => j.job.status === 'queued').sort((a, b) => a.job.requestedAt.localeCompare(b.job.requestedAt))[0];
       if (!next || await this.waiting()) return;
       const { path, job } = next;
+      delete job.reason; delete job.provider; delete job.fallback;
       job.status = 'running'; await saveJson(path, job);
       let session: Session | undefined;
       try {
@@ -158,7 +161,8 @@ export class SessionJobs {
           const output = join(this.library.summaries, session.id + '.md'), context = await this.context();
           await (this.workers.summarize ?? summarize)({ input: files.transcript, output, formatter: process.env.FORMATADOR_PATH ?? 'Arquivo Formato Resumo de Sessão.md',
             selection: (process.env.WIZARD_PROVIDER ?? 'auto') as Selection, timeoutMs: Number(process.env.WIZARD_TIMEOUT_MS ?? 900000),
-            ownerConfirmed: session.classification?.ownerDecision === 'yes', glossary: context.glossary, references: context.references });
+            ownerConfirmed: session.classification?.ownerDecision === 'yes', glossary: context.glossary, references: context.references,
+            onFallback: (provider, reason) => { job.fallback = { provider, reason }; } });
           await queueCollection({ summary: output, history: process.env.WIZARD_HISTORY_PATH ?? 'dados/Transcricoes_Completas_Sessoes.md' });
           session.summary = output; await this.library.save(session);
         }
@@ -166,6 +170,8 @@ export class SessionJobs {
         if (job.action === 'transcribe' && session.autoSummarize) job.autoSummary = true;
       } catch (e) {
         job.status = (e as NodeJS.ErrnoException).code === 'WIZARD_CAMPAIGN_MISMATCH' ? 'blocked' : 'failed';
+        if (e instanceof ProviderError) { job.reason = e.reason; job.provider = e.provider; }
+        if (job.status === 'failed') console.error('Pedido ' + job.action + ' falhou: ' + (job.reason ? job.provider + ' ' + job.reason : 'erro local') + '. Arquivos preservados.');
         if (job.status === 'blocked' && session) {
           const result = JSON.parse(await readFile(join(this.library.summaries, session.id + '.md.classification.json'), 'utf8'));
           session.classification = { category: result.category, accepted: false, confidence: result.confidence }; await this.library.save(session);

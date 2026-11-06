@@ -94,6 +94,15 @@ fila.resumo_pronto = {titulo}\nResumo pronto. Ele chega logo abaixo, com os bot�
 fila.confirmar_mesa = {titulo}\nNão tenho certeza de que esta gravação é uma sessão da Serpente de Duas Cabeças. É?
 fila.interrompida = {titulo}\nO pedido foi interrompido porque o bot reiniciou. Os arquivos estão guardados; peça de novo pelo menu.
 fila.falhou = {titulo}\nO pedido falhou. Os arquivos estão guardados; tente de novo pelo menu.
+# Linha extra quando a IA do resumo falha ou precisa usar a reserva. {motivo} = um dos textos fila.motivo_...
+fila.motivo = Motivo: {motivo}.
+fila.reserva = Aviso: {motivo}; usei a reserva.
+# {provedor} = Codex ou Claude
+fila.motivo_auth = o {provedor} está sem login (na VPS, rode `wizard login`)
+fila.motivo_limit = o {provedor} atingiu o limite de uso; tente mais tarde
+fila.motivo_timeout = o {provedor} demorou demais e foi interrompido
+fila.motivo_unavailable = o {provedor} não está instalado na VPS
+fila.motivo_erro = o {provedor} devolveu um erro ou uma resposta incompleta
 confirmacao.sim = Certo, vou gerar o resumo da Serpente de Duas Cabeças. Aviso aqui quando terminar.
 confirmacao.nao = Certo, não é Serpente de Duas Cabeças. A transcrição e o áudio continuam no menu.
 

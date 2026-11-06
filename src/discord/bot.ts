@@ -6,7 +6,7 @@ import { cleanupTranscript } from '../storage/cleanup.ts';
 import { eligibleForDeletion } from '../storage/retention.ts';
 import { queueFiles } from '../storage/queue-files.ts';
 import { SessionLibrary } from '../sessions/library.ts';
-import { SessionJobs, streamBusy } from '../sessions/jobs.ts';
+import { SessionJobs, streamBusy, type Job } from '../sessions/jobs.ts';
 import { PrivateMenu, confirmRow } from './private-menu.ts';
 import { t } from '../config/texts.ts';
 import { VoiceRecorder } from './voice-recorder.ts';
@@ -35,7 +35,7 @@ const jobs = new SessionJobs(library, async (job, session) => {
     : job.status === 'blocked' ? 'fila.confirmar_mesa' : job.status === 'interrupted' ? 'fila.interrompida' : 'fila.falhou';
   // Quando a IA não reconhece a mesa, pergunta ao dono em vez de decidir sozinha.
   const components = job.status === 'blocked' && session ? [confirmRow(session.id)] : [];
-  await user.send({ content: t(key, { titulo }).trim(), components, allowedMentions: { parse: [] } });
+  await user.send({ content: [t(key, { titulo }).trim(), ...providerNotes(job)].join('\n'), components, allowedMentions: { parse: [] } });
 }, { busy: streamBusy });
 const menu = new PrivateMenu(client, ownerId, library, jobs);
 const recorder = new VoiceRecorder(library, async session => {
@@ -64,6 +64,18 @@ const transport: Transport = {
     return { id: sent.id, channelId: sent.channelId };
   }
 };
+// Explica ao dono por que a IA falhou (login expirado, limite...) e se a reserva foi usada.
+function providerNotes(job: Job) {
+  const why = (provider: string, reason: string) => t(reason === 'auth' ? 'fila.motivo_auth' : reason === 'limit' ? 'fila.motivo_limit'
+    : reason === 'timeout' ? 'fila.motivo_timeout' : reason === 'unavailable' ? 'fila.motivo_unavailable' : 'fila.motivo_erro',
+    { provedor: provider === 'claude' ? 'Claude' : 'Codex' });
+  const notes: string[] = [];
+  if (job.status === 'failed') {
+    if (job.fallback) notes.push(t('fila.motivo', { motivo: why(job.fallback.provider, job.fallback.reason) }));
+    if (job.reason && job.provider) notes.push(t('fila.motivo', { motivo: why(job.provider, job.reason) }));
+  } else if (job.fallback) notes.push(t('fila.reserva', { motivo: why(job.fallback.provider, job.fallback.reason) }));
+  return notes;
+}
 async function logFailure(event: string, error: any) {
   console.error('Falha em ' + event + '. Dados locais preservados. Código: ' + (typeof error?.code === 'number' ? error.code : 'local'));
   try { await mkdir('dados', { recursive: true }); await appendFile('dados/falhas.jsonl', JSON.stringify({ at: new Date().toISOString(), event, code: typeof error?.code === 'number' ? error.code : null }) + '\n'); } catch {}
